@@ -21,3 +21,32 @@ def analyze_csv(filename,a,b=0):
 	mean = sum(highs)/len(highs)
 	crrt_price = highs[0]
 	return dates, highs, mean
+
+
+def decoration():
+	'''Line created to separate buttons'''
+	i = 0
+	while i !=20:
+		print("#", end='')
+		i += 1
+	i = 0
+	while i !=20:
+		print("#", end='')
+		i += 1
+	print('\n')
+
+def menu():
+	'''Function showing menu panel'''
+	#Now code for user-interactive decision on how to analyze data
+	print("Welcome to @piraartur risk calculator.")
+	print("Please, specify what would you like to do with your data.")
+	print("\n[1] -- Plot a chart")
+	print("[2] -- Calculate volatility")
+	print("[3] -- Calculate Value at Risk (VaR)")
+	print("[4] -- Calculate beta (you know your current asset gain and market gain")
+	print("[5] -- Calculate model beta (you don't know asset gain or market gain - or both)")
+	print("[6] -- Quit")
+	answer =  int(input())
+	return answer
+	
+
