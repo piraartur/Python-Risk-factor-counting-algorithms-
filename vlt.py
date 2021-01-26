@@ -1,10 +1,10 @@
-import matplotlib.pyplot as mp
-import plotly as pl
 import csv
 from datetime import datetime
 import sys
 
 
+## Credits @georgexsh jump() function,
+## https://stackoverflow.com/questions/46267392/how-to-jump-back-to-a-specific-line-of-code-python
 def jump(lineno):
     frame = sys._getframe().f_back
     called_from = frame

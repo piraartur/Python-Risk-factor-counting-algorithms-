@@ -1,5 +1,3 @@
-import matplotlib.pyplot as mp
-import plotly as pl
 import csv
 from datetime import datetime
 import sys
