@@ -9,6 +9,8 @@ import vlt
 import yfinance as yf
 from scipy.stats import norm
 from tabulate import tabulate
+import bubble
+import pandas as pd
 
 #User-interactive query for his data set
 print("Please write the name of csv file with data you want to analyze.")
@@ -35,9 +37,9 @@ while answer != "YES":
 		break
 
 vlt.decoration()
-
-answer =  vlt.menu()
-if answer != 6:
+cancel = False
+while cancel != True:
+	answer =  vlt.menu()
 	if answer == 1:
 		print("Please type name of your chart, or leave it blank.")
 		name_of_asset = input()
@@ -55,8 +57,8 @@ if answer != 6:
 		ax.tick_params(axis='both', which='major', labelsize=14)
 		mp.show()
 		vlt.decoration()
-		answer = 0
-		answer=vlt.menu()
+		answer = 9
+		answer=vlt.jump(42)
 
 
 	if answer == 2:
@@ -76,8 +78,8 @@ if answer != 6:
 		print(f"Calcuated value of annualized volatility equals {volatility}.")
 		print(f"Calculated value of daily volatility equals {daily_volatility}.")
 		vlt.decoration()
-		answer = 0
-	answer = vlt.menu()
+		answer = 9
+		answer = vlt.jump(42)
 
 	if answer == 3:
 		print("Please state in which column there are values for price highs BY ENTERING NUMBER.")
@@ -95,8 +97,35 @@ if answer != 6:
 		table = [['90%', VaR_90], ['95%', VaR_95], ['99%', VaR_99]]
 		headers =["Confidence level", "Value at Risk"]
 		print(tabulate(table, headers))
+
 		vlt.decoration()
-		answer = 0
-	answer = vlt.menu()
-else:
-	pass
+				
+		answer = 9
+		answer = vlt.jump(42)
+		
+
+	if answer == 4:
+		print("Please state in which column there are values for price highs BY ENTERING NUMBER.")
+		a=int(input())
+		print("Please state in which column there are values for price lows BY ENTERING NUMBER.")
+		b=int(input())
+		print("Please provide return of benchmark (INDEX) with same timeframe as your asset.")
+		variance =int(input())
+		dates, highs, mean, lows, daily_returns = vlt.analyze_csv(filename,a,0,b)
+		covariance = highs[0]/highs[-1]
+		try:
+			beta = covariance/variance
+			print(f"Beta of your asset equals to {beta}")
+		except ZeroDivisionError:
+			print("You cannot divide by 0.")
+		answer = 9
+		answer = vlt.jump(42)
+
+	if answer == 0:
+		cancel = True
+		print("Thanks for using my calculator. Don't forget to leave feedback at https://github.com/piraartur")
+		print("or give it star at github.")
+	else:
+		cancel = True
+		print("Thanks for using my calculator. Don't forget to leave feedback at https://github.com/piraartur")
+		print("or give it star at github.")
