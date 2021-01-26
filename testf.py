@@ -6,6 +6,9 @@ import numpy as np
 import math
 import PySimpleGUI as sg 
 import vlt 
+import yfinance as yf
+from scipy.stats import norm
+from tabulate import tabulate
 
 #User-interactive query for his data set
 print("Please write the name of csv file with data you want to analyze.")
@@ -43,7 +46,7 @@ if answer != 6:
 			a = int(input())
 			print("Please state in which column there are date values BY ENTERING NUMBER.")
 			b = int(input())
-			dates, highs, mean = vlt.analyze_csv(filename,a,b)
+			dates, highs, mean, lows, daily_returns = vlt.analyze_csv(filename,a,b)
 			fig, ax = mp.subplots()
 			ax.plot(dates, highs, c='black')
 			ax.set_title(f" {name_of_asset} ", fontsize=14)
@@ -56,10 +59,11 @@ if answer != 6:
 			answer = 0
 		answer=vlt.menu()
 
+
 		if answer == 2:
 			print("Please state in which column there are values for price highs BY ENTERING NUMBER.")
 			a = int(input())
-			dates, highs, mean = vlt.analyze_csv(filename,a)
+			dates, highs, mean, lows, daily_returns = vlt.analyze_csv(filename,a)
 			crrt_price = highs[-1]
 			variances = [] 
 			for high in highs:
@@ -74,5 +78,24 @@ if answer != 6:
 			print(f"Calculated value of daily volatility equals {daily_volatility}.")
 			vlt.decoration()
 			answer = 0
-			answer = vlt.menu()
-		
+		answer = vlt.menu()
+
+		if answer == 3:
+			print("Please state in which column there are values for price highs BY ENTERING NUMBER.")
+			a=int(input())
+			print("Please state in which column there are values for price lows BY ENTERING NUMBER.")
+			b=int(input())
+			dates, highs, mean, lows, daily_returns = vlt.analyze_csv(filename,a,0,b)
+			
+			
+			std_dev = np.std(daily_returns)
+
+			VaR_90 = float(norm.ppf(1-0.9, mean, std_dev)/1000000)
+			VaR_95 = float(norm.ppf(1-0.95, mean, std_dev)/1000000)
+			VaR_99 = float(norm.ppf(1-0.99, mean, std_dev)/1000000)
+			table = [['90%', VaR_90], ['95%', VaR_95], ['99%', VaR_99]]
+			headers =["Confidence level", "Value at Risk"]
+			print(tabulate(table, headers))
+			vlt.decoration()
+			answer = 0
+		answer = vlt.menu()
