@@ -5,7 +5,7 @@ from datetime import datetime
 
 
 
-def analyze_csv(filename,a,b=0):
+def analyze_csv(filename,a,b=0,c=1):
 	'''Function analyzing csv file'''
 	with open(filename) as f:
 		reader = csv.reader(f)
@@ -13,14 +13,21 @@ def analyze_csv(filename,a,b=0):
 		print(header_row)
 		highs = []
 		dates = []
+		lows = []
+		daily_returns=[]
 		for row in reader:
 			date = datetime.strptime(row[b], '%Y-%m-%d')
 			high = float(row[a])
 			highs.append(high)
 			dates.append(date)
+			low = float(row[c])
+			lows.append(low)
+			daily_return = ((low-high/low)*100)
+			daily_returns.append(daily_return)
 	mean = sum(highs)/len(highs)
-	crrt_price = highs[0]
-	return dates, highs, mean
+	crrt_price = highs[-1]
+	
+	return dates, highs, mean, lows, daily_returns
 
 
 def decoration():
