@@ -2,92 +2,130 @@ import matplotlib.pyplot as mp
 import plotly as pl
 import csv
 from datetime import datetime
-import sys
+import numpy as np
+import math
+import PySimpleGUI as sg 
+import vlt 
+import yfinance as yf
+from scipy.stats import norm
+from tabulate import tabulate
+import bubble
+import pandas as pd
+
+#User-interactive query for his data set
+print("Please write the name of csv file with data you want to analyze.")
+
+data = input()
+filename = f"{data}.csv"
+
+print("You have stated that your data")
+print(f"is located in {filename}.")
+print("Do you confirm? If you agree, type 'Yes'.")
+print("If you don't agree and would like to")
+print("input name of the file again, type 'No'.")
+
+answer = input().upper()
+while answer != "YES":
+	print("\nPlease input your filename once again.")
+	data = input()
+	filename = f'{data}.csv'
+	print("You have stated that your data")
+	print(f"is located in {filename}.")
+	print("\nDo you confirm? If you agree, type 'Yes'.")
+	answer_2 = input().upper()
+	if answer_2 == 'YES':
+		break
+
+vlt.decoration()
+cancel = False
+while cancel != True:
+	answer =  vlt.menu()
+	if answer == 1:
+		print("Please type name of your chart, or leave it blank.")
+		name_of_asset = input()
+		print("Please state in which column there are values for price highs BY ENTEING NUMBER.")
+		a = int(input())
+		print("Please state in which column there are date values BY ENTERING NUMBER.")
+		b = int(input())
+		dates, highs, mean, lows, daily_returns = vlt.analyze_csv(filename,a,b)
+		fig, ax = mp.subplots()
+		ax.plot(dates, highs, c='black')
+		ax.set_title(f" {name_of_asset} ", fontsize=14)
+		ax.set_ylabel("Price")
+		ax.set_xlabel("Date")
+		fig.autofmt_xdate()
+		ax.tick_params(axis='both', which='major', labelsize=14)
+		mp.show()
+		vlt.decoration()
+		answer = 9
+		answer=vlt.jump(42)
 
 
-def jump(lineno):
-    frame = sys._getframe().f_back
-    called_from = frame
+	if answer == 2:
+		print("Please state in which column there are values for price highs BY ENTERING NUMBER.")
+		a = int(input())
+		dates, highs, mean, lows, daily_returns = vlt.analyze_csv(filename,a)
+		crrt_price = highs[-1]
+		variances = [] 
+		for high in highs:
+			dffr = mean-high #dffr - difference
+			sqrd_dffr = dffr*dffr
+			variances.append(sqrd_dffr)
+		mean_variance = sum(variances)/len(variances)
+		volatility = math.sqrt(mean_variance)
+		daily_volatility = volatility/math.sqrt(252)
+		vlt.decoration()
+		print(f"Calcuated value of annualized volatility equals {volatility}.")
+		print(f"Calculated value of daily volatility equals {daily_volatility}.")
+		vlt.decoration()
+		answer = 9
+		answer = vlt.jump(42)
 
-    def hook(frame, event, arg):
-        if event == 'line' and frame == called_from:
-            try:
-                frame.f_lineno = lineno
-            except ValueError as e:
-                print("jump failed:", e)
-            while frame:
-                frame.f_trace = None
-                frame = frame.f_back
-            return None
-        return hook
+	if answer == 3:
+		print("Please state in which column there are values for price highs BY ENTERING NUMBER.")
+		a=int(input())
+		print("Please state in which column there are values for price lows BY ENTERING NUMBER.")
+		b=int(input())
+		dates, highs, mean, lows, daily_returns = vlt.analyze_csv(filename,a,0,b)
+			
+			
+		std_dev = np.std(daily_returns)
 
-    while frame:
-        frame.f_trace = hook
-        frame = frame.f_back
-    sys.settrace(hook)
+		VaR_90 = float(norm.ppf(1-0.9, mean, std_dev)/1000000)
+		VaR_95 = float(norm.ppf(1-0.95, mean, std_dev)/1000000)
+		VaR_99 = float(norm.ppf(1-0.99, mean, std_dev)/1000000)
+		table = [['90%', VaR_90], ['95%', VaR_95], ['99%', VaR_99]]
+		headers =["Confidence level", "Value at Risk"]
+		print(tabulate(table, headers))
 
+		vlt.decoration()
+				
+		answer = 9
+		answer = vlt.jump(42)
+		
 
-def analyze_csv(filename,a,b=0,c=1):
-	'''Function analyzing csv file'''
-	with open(filename) as f:
-		reader = csv.reader(f)
-		header_row = next(f)
-		#print(header_row)
-		highs = []
-		dates = []
-		lows = []
-		daily_returns=[]
-		for row in reader:
-			date = datetime.strptime(row[b], '%Y-%m-%d')
-			high = float(row[a])
-			highs.append(high)
-			dates.append(date)
-			low = float(row[c])
-			lows.append(low)
-			daily_return = ((low-high/low)*100)
-			daily_returns.append(daily_return)
-	mean = sum(highs)/len(highs)
-	crrt_price = highs[-1]
-	
-	return dates, highs, mean, lows, daily_returns
+	if answer == 4:
+		print("Please state in which column there are values for price highs BY ENTERING NUMBER.")
+		a=int(input())
+		print("Please state in which column there are values for price lows BY ENTERING NUMBER.")
+		b=int(input())
+		print("Please provide return of benchmark (INDEX) with same timeframe as your asset.")
+		variance =int(input())
+		dates, highs, mean, lows, daily_returns = vlt.analyze_csv(filename,a,0,b)
+		covariance = highs[0]/highs[-1]
+		try:
+			beta = covariance/variance
+			print(f"Beta of your asset equals to {beta}")
+		except ZeroDivisionError:
+			print("You cannot divide by 0.")
+		answer = 9
+		answer = vlt.jump(42)
 
-
-def decoration():
-	'''Line created to separate buttons'''
-	i = 0
-	while i !=20:
-		print("#", end='')
-		i += 1
-	i = 0
-	while i !=20:
-		print("#", end='')
-		i += 1
-	print('\n')
-
-def menu():
-	'''Function showing menu panel'''
-	#Now code for user-interactive decision on how to analyze data
-	print("Welcome to @piraartur risk calculator.")
-	print("Please, be aware that it is beta version, all exceptions to bugs are not done yet;")
-	print("However you can use it with 4 operations.")
-	print("New releases will support french, italian and polish translations.")
-	print("If you want to hear when update will be available, contact me on github (link below).")
-	print("Please, specify what would you like to do with your data.")
-	print("If you enjoy my simple calculator, please give star at https://github.com/piraartur")
-	print("or recommend my tool to other people.")
-	print("Thank you for using this tool. It means much to me.")
-	print("PS. If you happen to encounter some bugs correlated strictly to math operations\n of this calculator contact me instantly")
-	print("Author of this calculator is not accountable for risk management, decision making and investments\n of this app users.")
-	print("Be aware that the author is not proffessional, does not provide proffessional services. \nThis app can be viewed only as an author python syntax exercise, not investment decision provider ")
-	print("neither as a system to risk (bet) money according to its calculations.")
-	print("\n[1] -- Plot a chart")
-	print("[2] -- Calculate volatility")
-	print("[3] -- Calculate Value at Risk (VaR)")
-	print("[4] -- Calculate beta (you know your current asset gain and market gain")
-	print("[N/A] -- AVAILABLE IN FUTURE (cVaR, Hedge Ratio))")
-	print("[0] -- Quit")
-	answer =  int(input())
-	return answer
-
-	
-
+	if answer == 0:
+		cancel = True
+		print("Thanks for using my calculator. Don't forget to leave feedback at https://github.com/piraartur")
+		print("or give it star at github.")
+	else:
+		cancel = True
+		print("Thanks for using my calculator. Don't forget to leave feedback at https://github.com/piraartur")
+		print("or give it star at github.")
